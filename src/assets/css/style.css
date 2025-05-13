@@ -1,0 +1,99 @@
+/* style.css */
+/* Estilos da aplicação de monitoramento de água */
+
+/* Estilos dos quadros de conteúdo */
+.linha1, .linha2 {
+    display: flex;
+    flex-direction: row;
+  }
+  
+  .titulo_quadro {
+    font-family: "Rubik", sans-serif;
+    font-weight: 600;
+    font-size: 40px;
+    color: antiquewhite;
+  }
+  
+  .texto_normal {
+    font-family: "Rubik", sans-serif;
+    font-weight: 200;
+    font-size: 20px;
+    color: antiquewhite;
+  }
+  
+  .bloco_texto {
+    width: 441px;
+  }
+  
+  /* Estilos dos quadros */
+  .Quadro1 {
+    width: 741px;
+    height: 261px;
+    background-color: #00A5EC;
+    padding: 10px;
+    margin: 10px;
+    border-radius: 13px;
+  }
+  
+  .Quadro2 {
+    width: 445px;
+    height: 261px;
+    margin: 10px;
+    background-color: #00A5EC;
+    padding: 10px;
+    border-radius: 13px;
+  }
+  
+  .Quadro3 {
+    width: 741px;
+    height: 261px;
+    background-color: #6E92A2;
+    padding: 10px;
+    margin: 10px;
+    border-radius: 13px;
+  }
+  
+  .Quadro4 {
+    width: 445px;
+    height: 261px;
+    margin: 10px;
+    background-color: #6E92A2;
+    padding: 10px;
+    border-radius: 13px;
+  }
+  
+  .Quadro5 {
+    width: 1055px;
+    height: 261px;
+    margin: 10px;
+    background-color: #6E92A2;
+    padding: 10px;
+    border-radius: 13px;
+  }
+  
+  /* Media queries para responsividade */
+  @media screen and (max-width: 768px) {
+    .sidebar {
+      width: 100%;
+      height: auto;
+      position: relative;
+    }
+    
+    .sidebar a {
+      float: left;
+      padding: 15px;
+    }
+    
+    .main {
+      margin-left: 0;
+      width: 100%;
+    }
+    
+    .linha1, .linha2 {
+      flex-direction: column;
+    }
+    
+    .Quadro1, .Quadro2, .Quadro3, .Quadro4, .Quadro5 {
+      width: calc(100% - 20px);
+    }
+  }
