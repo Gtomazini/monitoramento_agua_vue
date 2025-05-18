@@ -661,18 +661,18 @@ export default {
 /* Área de detalhes embaixo do gráfico */
 .detalhes-ponto {
   width: 100%;
-  min-height: 48px;
+  height: 80px; /* Altura fixa para evitar expansão */
   margin-top: 12px;
   padding: 10px;
   background: rgba(255,255,255,0.15);
   border-radius: 8px;
   border: 1px solid rgba(255,255,255,0.3);
   box-sizing: border-box;
-  transition: min-height 0.2s;
+  overflow: hidden; /* Evita que conteúdo saia da área */
 }
 
 .ponto-detalhes {
-  min-height: 48px;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -709,10 +709,13 @@ export default {
 }
 
 .ponto-placeholder {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   color: rgba(255,255,255,0.6);
   font-style: italic;
-  padding: 30px 0;
   font-size: 0.9rem;
 }
 
