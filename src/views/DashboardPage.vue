@@ -55,29 +55,29 @@
                 <!-- Grid -->
                 <g stroke="#fff" stroke-width="1">
                   <!-- Linhas horizontais (para valores) -->
-                  <line v-for="i in 5" :key="'h'+i" :y1="30 + (i-1)*40" :y2="30 + (i-1)*40" x1="80" x2="580" />
+                  <line v-for="i in 5" :key="'h'+i" :y1="20 + (i-1)*42" :y2="20 + (i-1)*42" x1="80" x2="580" />
                   <!-- Linhas verticais (para tempo) -->
-                  <line v-for="i in 6" :key="'v'+i" :x1="80 + (i-1)*100" :x2="80 + (i-1)*100" y1="30" y2="190" />
+                  <line v-for="i in 6" :key="'v'+i" :x1="80 + (i-1)*100" :x2="80 + (i-1)*100" y1="20" y2="180" />
                 </g>
                 
                 <!-- Eixos -->
-                <line x1="80" y1="30" x2="80" y2="190" stroke="#007bb8" stroke-width="3" />
-                <line x1="80" y1="190" x2="580" y2="190" stroke="#007bb8" stroke-width="3" />
+                <line x1="80" y1="20" x2="80" y2="180" stroke="#007bb8" stroke-width="3" />
+                <line x1="80" y1="180" x2="580" y2="180" stroke="#007bb8" stroke-width="3" />
                 
                 <!-- Labels do eixo Y (volumes) - dinâmico baseado nos dados -->
-                <text v-if="pontosHorizontais.length > 0" x="70" y="40" font-size="14" fill="#007bb8" text-anchor="end">
+                <text v-if="pontosHorizontais.length > 0" x="70" y="40" font-size="13" fill="#007bb8" text-anchor="end">
                   {{ maxValorGrafico }}
                 </text>
-                <text v-if="pontosHorizontais.length > 0" x="70" y="120" font-size="14" fill="#007bb8" text-anchor="end">
+                <text v-if="pontosHorizontais.length > 0" x="70" y="100" font-size="13" fill="#007bb8" text-anchor="end">
                   {{ valorMedioGrafico }}
                 </text>
-                <text v-if="pontosHorizontais.length > 0" x="70" y="195" font-size="14" fill="#007bb8" text-anchor="end">
+                <text v-if="pontosHorizontais.length > 0" x="70" y="160" font-size="13" fill="#007bb8" text-anchor="end">
                   {{ minValorGrafico }}
                 </text>
                 
                 <!-- Labels do eixo X (horários) -->
                 <text v-for="(p, i) in pontosHorizontais" :key="'x-label'+i" 
-                      :x="p.x" y="210" font-size="14" fill="#007bb8" text-anchor="middle">
+                      :x="p.x" y="210" font-size="13" fill="#007bb8" text-anchor="middle">
                   {{ p.hora }}
                 </text>
                 
@@ -86,7 +86,7 @@
                 
                 <!-- Pontos -->
                 <g class="timeline-point" v-for="(p, i) in pontosHorizontais" :key="i">
-                  <circle :cx="p.x" :cy="p.y" r="8" fill="#fff" stroke="#007bb8" stroke-width="3" 
+                  <circle :cx="p.x" :cy="p.y" r="7" fill="#fff" stroke="#007bb8" stroke-width="3" 
                           @mouseenter="showTooltipHorizontal(i)" @mouseleave="hideTooltip" 
                           class="ponto-interativo" />
                 </g>
@@ -112,8 +112,66 @@
         </section>
       </section>
       <section class="linha3">
-        <section class="Quadro5">
-          <section class="titulo_quadro">Sobre</section>
+        <section class="Quadro5 quadro-analise-diaria">
+          <section class="titulo_quadro">Análise - Consumo Diário</section>
+          <div class="analise-flex">
+            <div class="analise-lista">
+              <div v-for="(item, idx) in ultimosConsumos" :key="item.id_consumo_diario"
+                   :class="['analise-item', idx % 2 === 0 ? 'analise-item-claro' : 'analise-item-escuro', item.id_consumo_diario === analiseSelecionadoId ? 'analise-item-selecionado' : '']"
+                   @click="selecionarAnalise(item.id_consumo_diario)">
+                <span class="analise-dia">{{ item.datetime }}</span>
+                <span class="analise-volume">{{ item.volume_diario }} m³</span>
+              </div>
+            </div>
+            <div class="analise-grafico">
+              <div class="grafico-legenda grafico-legenda-analise">
+                <h4>Consumo por Pontos Diários</h4>
+                <p>Volume de água consumido ao longo do dia (em m³)</p>
+              </div>
+              <svg class="timeline-svg-horizontal" width="100%" height="250" viewBox="0 0 600 250" style="display:block;">
+                <rect x="0" y="0" width="600" height="250" fill="#eaf6fb" />
+                <g stroke="#fff" stroke-width="1">
+                  <line v-for="i in 5" :key="'h'+i" :y1="20 + (i-1)*42" :y2="20 + (i-1)*42" x1="80" x2="580" />
+                  <line v-for="i in 6" :key="'v'+i" :x1="80 + (i-1)*100" :x2="80 + (i-1)*100" y1="20" y2="180" />
+                </g>
+                <line x1="80" y1="20" x2="80" y2="180" stroke="#007bb8" stroke-width="3" />
+                <line x1="80" y1="180" x2="580" y2="180" stroke="#007bb8" stroke-width="3" />
+                <text v-if="analisePontosHorizontais.length > 0" x="70" y="40" font-size="13" fill="#007bb8" text-anchor="end">
+                  {{ analiseMaxValorGrafico }}
+                </text>
+                <text v-if="analisePontosHorizontais.length > 0" x="70" y="100" font-size="13" fill="#007bb8" text-anchor="end">
+                  {{ analiseValorMedioGrafico }}
+                </text>
+                <text v-if="analisePontosHorizontais.length > 0" x="70" y="160" font-size="13" fill="#007bb8" text-anchor="end">
+                  {{ analiseMinValorGrafico }}
+                </text>
+                <text v-for="(p, i) in analisePontosHorizontais" :key="'x-label-analise'+i"
+                      :x="p.x" y="210" font-size="13" fill="#007bb8" text-anchor="middle">
+                  {{ p.hora }}
+                </text>
+                <polyline :points="analisePolylinePointsHorizontal" fill="none" stroke="#007bb8" stroke-width="3" />
+                <g class="timeline-point" v-for="(p, i) in analisePontosHorizontais" :key="i">
+                  <circle :cx="p.x" :cy="p.y" r="7" fill="#fff" stroke="#007bb8" stroke-width="3"
+                          @mouseenter="showTooltipAnalise(i)" @mouseleave="hideTooltipAnalise"
+                          class="ponto-interativo" />
+                </g>
+              </svg>
+              <div class="detalhes-ponto">
+                <div v-if="analiseTooltip.show" class="ponto-detalhes">
+                  <div class="ponto-info">
+                    <span class="ponto-horario">{{ analiseTooltip.ponto.hora }}</span>
+                    <span class="ponto-valor">{{ analiseTooltip.ponto.valor }} m³</span>
+                  </div>
+                  <div class="ponto-descricao">
+                    Consumo registrado às {{ analiseTooltip.ponto.hora }}
+                  </div>
+                </div>
+                <div v-else class="ponto-placeholder">
+                  <span>Passe o mouse sobre um ponto para ver os detalhes</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
       </section>
     </div>
@@ -137,12 +195,16 @@ export default {
       detalhes: null,
       pontosConsumo: [], // Array dos pontos reais da API
       pontosHorizontais: [], // Array processado para o gráfico
+      analiseSelecionadoId: null,
+      analisePontos: [],
+      analisePontosHorizontais: [],
       tooltip: {
         show: false,
         x: 0,
         y: 0,
         ponto: {}
-      }
+      },
+      analiseTooltip: { show: false, ponto: {} }
     }
   },
   mounted() {
@@ -172,6 +234,13 @@ export default {
         this.pontosConsumo = [];
         this.pontosHorizontais = [];
       });
+
+      // Seleciona o mais recente por padrão
+      this.$nextTick(() => {
+        if (this.ultimosConsumos.length > 0) {
+          this.selecionarAnalise(this.ultimosConsumos[0].id_consumo_diario);
+        }
+      });
   },
   computed: {
     polylinePointsVertical() {
@@ -194,6 +263,25 @@ export default {
       if (!this.pontosConsumo || this.pontosConsumo.length === 0) return '0.00';
       const max = parseFloat(this.maxValorGrafico);
       const min = parseFloat(this.minValorGrafico);
+      return ((max + min) / 2).toFixed(3);
+    },
+    analisePolylinePointsHorizontal() {
+      return this.analisePontosHorizontais.map(p => `${p.x},${p.y}`).join(' ');
+    },
+    analiseMaxValorGrafico() {
+      if (!this.analisePontos || this.analisePontos.length === 0) return '0.00';
+      const max = Math.max(...this.analisePontos.map(p => parseFloat(p.consumo_pontos)));
+      return max.toFixed(3);
+    },
+    analiseMinValorGrafico() {
+      if (!this.analisePontos || this.analisePontos.length === 0) return '0.00';
+      const min = Math.min(...this.analisePontos.map(p => parseFloat(p.consumo_pontos)));
+      return min.toFixed(3);
+    },
+    analiseValorMedioGrafico() {
+      if (!this.analisePontos || this.analisePontos.length === 0) return '0.00';
+      const max = parseFloat(this.analiseMaxValorGrafico);
+      const min = parseFloat(this.analiseMinValorGrafico);
       return ((max + min) / 2).toFixed(3);
     }
   },
@@ -278,6 +366,48 @@ export default {
             console.error('Erro ao atualizar detalhes:', err);
           });
       }
+    },
+    selecionarAnalise(id) {
+      this.analiseSelecionadoId = id;
+      fetch(`https://watergame.gabrieltomazini.com/api/v1/consumo-diario/${id}/detalhado`)
+        .then(res => res.json())
+        .then(detalhes => {
+          this.analisePontos = detalhes.pontos_consumo || [];
+          this.processarAnalisePontosParaGrafico();
+        });
+    },
+    processarAnalisePontosParaGrafico() {
+      if (!this.analisePontos || this.analisePontos.length === 0) {
+        this.analisePontosHorizontais = [];
+        return;
+      }
+      const pontosOrdenados = [...this.analisePontos].sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
+      const valores = pontosOrdenados.map(p => parseFloat(p.consumo_pontos));
+      const minValor = Math.min(...valores);
+      const maxValor = Math.max(...valores);
+      const larguraGrafico = 500;
+      const alturaGrafico = 160;
+      const margemX = 80;
+      const margemY = 30;
+      this.analisePontosHorizontais = pontosOrdenados.map((ponto, index) => {
+        const x = margemX + (index * larguraGrafico) / Math.max(pontosOrdenados.length - 1, 1);
+        let y;
+        if (maxValor === minValor) {
+          y = margemY + alturaGrafico / 2;
+        } else {
+          const proporcao = (parseFloat(ponto.consumo_pontos) - minValor) / (maxValor - minValor);
+          y = margemY + alturaGrafico - (proporcao * alturaGrafico);
+        }
+        const hora = new Date(ponto.datetime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        return { x, y, hora, valor: ponto.consumo_pontos, datetime: ponto.datetime };
+      });
+    },
+    showTooltipAnalise(i) {
+      const ponto = this.analisePontosHorizontais[i];
+      this.analiseTooltip = { show: true, ponto };
+    },
+    hideTooltipAnalise() {
+      this.analiseTooltip.show = false;
     }
   }
 }
@@ -468,7 +598,7 @@ export default {
   justify-content: flex-start;
   margin-top: 16px;
   position: relative;
-  padding: 20px;
+  padding: 20px 20px 10px 20px;
   box-sizing: border-box;
 }
 
@@ -497,7 +627,8 @@ export default {
   display: block;
   width: 100%;
   max-width: 100%;
-  height: auto;
+  height: 250px !important;
+  min-height: 180px;
   background: transparent;
 }
 
@@ -515,17 +646,22 @@ export default {
 /* Área de detalhes embaixo do gráfico */
 .detalhes-ponto {
   width: 100%;
-  min-height: 80px;
-  margin-top: 20px;
-  padding: 15px;
+  min-height: 48px;
+  margin-top: 12px;
+  padding: 10px;
   background: rgba(255,255,255,0.15);
   border-radius: 8px;
   border: 1px solid rgba(255,255,255,0.3);
+  box-sizing: border-box;
+  transition: min-height 0.2s;
 }
 
 .ponto-detalhes {
-  text-align: center;
-  color: #fff;
+  min-height: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .ponto-info {
@@ -601,40 +737,106 @@ export default {
   color: #fff;
 }
 
-/* Responsividade */
+/* Estilos da análise diária */
+.quadro-analise-diaria {
+  min-height: 480px;
+  height: auto;
+  max-height: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 32px 32px 64px 32px; /* aumenta o padding inferior */
+  box-sizing: border-box;
+}
+.analise-flex {
+  display: flex;
+  flex-direction: row;
+  gap: 32px;
+  width: auto;
+  height: 100%;
+  align-items: flex-start;
+  justify-content: center;
+}
+.analise-lista {
+  flex: 0 0 48%;
+  min-width: 260px;
+  max-width: 400px;
+  background: rgba(0,0,0,0.07);
+  border-radius: 8px;
+  padding: 18px 0 18px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  height: auto;
+  overflow-y: auto;
+}
+.analise-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 18px;
+  font-size: 1.08rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  border: none;
+}
+.analise-item-claro {
+  background: rgba(255,255,255,0.13);
+  color: #111;
+}
+.analise-item-escuro {
+  background: rgba(0,0,0,0.07);
+  color: #111;
+}
+.analise-item-selecionado {
+  background: #fff !important;
+  color: #007bb8 !important;
+  font-weight: bold;
+}
+.analise-dia {
+  font-weight: 400;
+}
+.analise-volume {
+  font-weight: 700;
+}
+.analise-grafico {
+  flex: 1 1 0;
+  min-width: 320px;
+  max-width: 600px;
+  padding: 0 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
 @media (max-width: 1200px) {
-  .dashboard-col-right {
-    flex: 0 0 350px;
-    min-width: 350px;
-    max-width: 350px;
+  .analise-lista {
+    min-width: 180px;
+    max-width: 320px;
+  }
+  .analise-grafico {
+    min-width: 200px;
+    max-width: 100%;
   }
 }
-
 @media (max-width: 900px) {
-  .dashboard-content {
-    margin-left: 80px; /* Sidebar menor em mobile */
-    padding: 10px;
+  .quadro-analise-diaria {
+    min-height: 240px;
+    height: auto;
+    max-height: none;
   }
-  
-  .dashboard-row {
+  .analise-flex {
     flex-direction: column;
-    gap: 16px;
-    height: auto;
+    gap: 12px;
+    align-items: stretch;
+    justify-content: flex-start;
   }
-  
-  .dashboard-col, 
-  .dashboard-col-left, 
-  .dashboard-col-right {
+  .analise-lista, .analise-grafico {
+    max-width: 100%;
+    width: 100%;
     min-width: unset;
-    max-width: unset;
-    width: 100%;
-    height: auto;
-    flex: none;
-  }
-  
-  .Quadro2 {
-    min-height: 320px;
-    width: 100%;
   }
 }
 
@@ -642,6 +844,14 @@ export default {
   .dashboard-content {
     margin-left: 0; /* Remove margin do sidebar em telas muito pequenas */
     padding: 5px;
+  }
+  .quadro-analise-diaria {
+    min-height: 200px;
+    height: 200px;
+    max-height: 240px;
+  }
+  .timeline-svg-horizontal {
+    height: 120px !important;
   }
 }
 </style>
