@@ -9,16 +9,21 @@
             <section class="Quadro1">
               <section class="titulo_quadro">Bem vindo, Gabriel !</section>
               <section class="bloco_texto">
-                <section class="texto_normal">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus sollicitudin nec dui ac gravida.</section>
+                <div v-if="cobertura < 20" class="status-alerta status-urgencia">URGÊNCIA - Chamar o suporte</div>
+                <div v-else-if="cobertura < 50" class="status-alerta status-alerta-amarelo">ALERTA - Sensores sem leitura</div>
+                <div v-else-if="cobertura < 90" class="status-alerta status-estavel">ESTÁVEL - Alguns sensores estão sofrendo interferência</div>
+                <div v-else class="status-alerta status-perfeito">PERFEITO - Todos os sensores estão funcionando</div>
+                <div class="cidade-temperatura texto-branco">Temperatura: Ribeirão Preto - 28°C</div>
+                <div class="horario-sistema texto-branco">Horário do sistema: {{ horarioSistema }}</div>
               </section>
-              <section class="titulo_quadro">28°C</section>
-              <section class="titulo_quadro">temperatura</section>
             </section>
             <section class="Quadro2">
               <section class="titulo_quadro">Dispositivos</section>
               <div class="device-list">
                 <div v-for="device in devices" :key="device.id" class="device-item">
-                  <div class="device-circle"></div>
+                  <div class="device-circle">
+                    <img src="@/assets/images/perfil/sensor.png" alt="Sensor" class="device-img" />
+                  </div>
                   <div class="device-name">{{ device.name }}</div>
                 </div>
               </div>
@@ -27,15 +32,57 @@
           <section class="linha2">
             <section class="Quadro3">
               <section class="titulo_quadro">Cobertura</section>
+              <div class="cobertura-bar-container">
+                <div class="cobertura-bar">
+                  <div class="cobertura-bar-preenchida" :style="{width: cobertura + '%'}"></div>
+                  <div class="cobertura-label">{{ cobertura }}% dos dispositivos com leitura</div>
+                </div>
+                <div class="cobertura-legenda">
+                  A barra representa a porcentagem de dispositivos cadastrados que possuem pelo menos uma leitura registrada no sistema.
+                </div>
+              </div>
             </section>
             <section class="Quadro4">
-              <section class="titulo_quadro">Highlights</section>
+              <section class="titulo_quadro">Mapa</section>
+              <ul class="mapa-lista">
+                <li><strong>HOME</strong> - Você está aqui! <span class="emoji">🏠</span></li>
+                <li><strong>DASHBOARD</strong> - Informações sobre o consumo de água em tempo real</li>
+                <li><span class="emoji">🔒</span> <strong>CONSUMO</strong> - Métricas do consumo na região<span class="mapa-desativado">*</span></li>
+                <li><span class="emoji">🔒</span> <strong>ALERTAS</strong> - Configuração de alertas sobre consumo E-mail SMS etc<span class="mapa-desativado">*</span></li>
+                <li><span class="emoji">🔒</span> <strong>PREFERÊNCIA</strong> - Configuração do painel<span class="mapa-desativado">*</span></li>
+                <li><span class="emoji">🔒</span> <strong>DISPOSITIVOS</strong> - Cadastro e remoção de dispositivo<span class="mapa-desativado">*</span></li>
+                <li><span class="emoji">🔒</span> <strong>PERFIL</strong> - Configurações de conta, dns e dupla autenticação<span class="mapa-desativado">*</span></li>
+              </ul>
+              <div class="mapa-info">*desativado em acesso aberto, use localhost iot para ter acesso</div>
             </section>
           </section>
         </section>
         <section class="linha3">
           <section class="Quadro5">
             <section class="titulo_quadro">Sobre</section>
+            <div class="sobre-flex">
+              <div class="sobre-col">
+                <div class="sobre-autores">
+                  <strong>Autores:</strong><br>
+                  GRANERO, Chaiene Alarcon Mendes<br>
+                  TOMAZINI, Gabriel<br>
+                  MARTINS, Gabriela Gosuen<br>
+                  SOUZA, Mirella<br>
+                  BORGES, Sandro Fonseca
+                </div>
+                <div class="sobre-titulo">
+                  <strong>Título:</strong><br>
+                  Sistema IoT para Monitoramento e Gestão de Consumo de Água em Residências.
+                </div>
+              </div>
+              <div class="sobre-col sobre-info">
+                <strong>Relatório Técnico-Científico</strong> – 17 f.<br>
+                Engenharia da Computação – Universidade Virtual do Estado de São Paulo<br>
+                <strong>Tutor:</strong> José Vitor Carignato David<br>
+                <strong>Polos:</strong> Franca e Ribeirão Preto - SP<br>
+                <strong>Ano:</strong> 2025
+              </div>
+            </div>
           </section>
         </section>
       </section>
@@ -56,19 +103,41 @@
     data() {
       return {
         temperatura: '28°C',
-        devices: []
+        devices: [],
+        cobertura: 0, // porcentagem de cobertura
+        horarioSistema: ''
       }
     },
     mounted() {
+      // Buscar devices primeiro
       fetch('https://watergame.gabrieltomazini.com/api/v1/devices/')
         .then(res => res.json())
-        .then(data => {
-          // Ajusta para pegar apenas name_device
-          this.devices = Array.isArray(data) ? data.map(d => ({ name: d.name_device, id: d.id_device })) : [];
+        .then(devicesData => {
+          this.devices = Array.isArray(devicesData) ? devicesData.map(d => ({ name: d.name_device, id: d.id_device })) : [];
+          // Buscar consumos diários
+          return fetch('https://watergame.gabrieltomazini.com/api/v1/consumo-diario/');
+        })
+        .then(res => res.json())
+        .then(consumosData => {
+          // Extrair ids de devices com leitura
+          const idsComLeitura = new Set(consumosData.map(c => c.id_device_vinc));
+          // Calcular cobertura
+          const totalDevices = this.devices.length;
+          const totalComLeitura = Array.from(idsComLeitura).filter(id => this.devices.some(d => d.id === id)).length;
+          this.cobertura = totalDevices > 0 ? Math.round((totalComLeitura / totalDevices) * 100) : 0;
         })
         .catch(() => {
           this.devices = [];
+          this.cobertura = 0;
         });
+      this.atualizarHorarioSistema();
+      setInterval(this.atualizarHorarioSistema, 1000);
+    },
+    methods: {
+      atualizarHorarioSistema() {
+        const agora = new Date();
+        this.horarioSistema = agora.toLocaleString('pt-BR', { hour12: false });
+      }
     }
   }
   </script>
@@ -163,12 +232,127 @@
     font-size: 2rem;
     color: #00A5EC;
     font-weight: bold;
+    overflow: hidden;
+  }
+  .device-img {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+    display: block;
   }
   .device-name {
     color: #111;
     font-size: 1rem;
     text-align: center;
     word-break: break-word;
+  }
+  
+  .Quadro4 {
+    min-height: 220px; /* aumenta altura mínima para caber mais info */
+  }
+  .mapa-lista {
+    list-style: none;
+    padding: 0;
+    margin: 4px 0 0 0; /* reduz espaço superior */
+  }
+  .mapa-lista li {
+    color: #fff;
+    font-size: 1.01rem;
+    margin-bottom: 3px; /* reduz espaço entre linhas */
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1.2;
+  }
+  .mapa-lista .emoji {
+    margin-left: 4px;
+  }
+  .mapa-desativado {
+    color: #ffd700;
+    margin-left: 4px;
+  }
+  .mapa-info {
+    color: #ffd700;
+    font-size: 0.93rem;
+    margin-top: 4px; /* reduz espaço superior */
+    font-style: italic;
+    line-height: 1.2;
+  }
+  
+  .sobre-flex {
+    display: flex;
+    flex-direction: row;
+    gap: 40px;
+    width: 100%;
+    background: rgba(0,0,0,0.07);
+    border-radius: 8px;
+    padding: 14px 18px;
+    box-sizing: border-box;
+  }
+  .sobre-col {
+    flex: 1 1 0;
+    min-width: 220px;
+    color: #fff;
+    font-size: 1.05rem;
+    line-height: 1.5;
+  }
+  .sobre-autores {
+    margin-bottom: 10px;
+  }
+  .sobre-titulo {
+    margin-bottom: 10px;
+  }
+  .sobre-info strong {
+    color: #ffd700;
+  }
+  
+  .cobertura-bar-container {
+    width: 100%;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+  }
+  .cobertura-bar {
+    width: 100%;
+    height: 44px; /* mais grossa */
+    background: #eaf6fb;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    margin-bottom: 8px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cobertura-bar-preenchida {
+    height: 100%;
+    background: linear-gradient(90deg, #00c6fb 0%, #005bea 100%);
+    border-radius: 16px 0 0 16px;
+    transition: width 0.7s cubic-bezier(.4,2,.3,1);
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 1;
+  }
+  .cobertura-label {
+    color: #111;
+    font-size: 1.18rem;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.10);
+    width: 100%;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+  }
+  .cobertura-legenda {
+    color: #fff;
+    font-size: 0.98rem;
+    margin-top: 6px;
+    text-align: center;
+    opacity: 0.85;
   }
   
   @media (max-width: 900px) {
@@ -179,5 +363,49 @@
     .main {
       padding: 8px;
     }
+    .sobre-flex {
+      flex-direction: column;
+      gap: 10px;
+      padding: 10px 6px;
+    }
+  }
+  
+  .texto-branco {
+    color: #fff !important;
+  }
+  .status-alerta {
+    font-size: 1.32rem;
+    font-weight: 700;
+    margin: 12px 0 8px 0;
+    padding: 6px 14px;
+    border-radius: 8px;
+    text-align: left;
+    width: fit-content;
+  }
+  .status-urgencia {
+    background: #ff3b3b;
+    color: #fff;
+  }
+  .status-alerta-amarelo {
+    background: #ffd700;
+    color: #222;
+  }
+  .status-estavel {
+    background: #ffb300;
+    color: #fff;
+  }
+  .status-perfeito {
+    background: #00c853;
+    color: #fff;
+  }
+  .cidade-temperatura {
+    font-size: 1.18rem;
+    margin-top: 10px;
+    font-weight: 500;
+  }
+  .horario-sistema {
+    font-size: 1.11rem;
+    margin-top: 2px;
+    opacity: 0.93;
   }
   </style>

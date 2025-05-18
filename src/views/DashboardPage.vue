@@ -1,55 +1,4 @@
-
-/* Container principal do dashboard */
-.dashboardpage {
-  display: flex;
-  min-height: 100vh;
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-/* Área de conteúdo que fica ao lado do sidebar */
-.dashboard-content {
-  flex: 1;
-  margin-left: 80px; /* Espaço para o sidebar */
-  margin-right: 80px; /* Espaço na direita para não encostar no sidebar */
-  padding: 20px;
-  box-sizing: border-box;
-  min-width: 0; /* Importante para prevenir overflow */
-}
-
-/* Container das duas colunas principais */
-.dashboard-row {
-  display: flex;
-  flex-direction: row;
-  gap: 20px;
-  height: calc(100vh - 120px); /* Ajuste conforme necessário */
-  margin-bottom: 20px;
-}
-
-.dashboard-col {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-/* Coluna esquerda - 50% do espaço disponível */
-.dashboard-col-left {
-  flex: 1;
-  gap: 20px;
-  justify-content: flex-start;
-  min-width: 0; /* Remove largura mínima fixa */
-}
-
-/* Coluna direita - 50% do espaço disponível */
-.dashboard-col-right {
-  flex: 1;
-  justify-content: flex-start;
-  align-items: stretch;
-  min-width<template>
+<template>
   <div class="dashboardpage">
     <Sidebar />
     <div class="dashboard-content">
@@ -59,21 +8,39 @@
           <section class="Quadro1">
             <section class="titulo_quadro">Consumo - Diário</section>
             <div v-if="consumoDiario">
-              <div class="consumo-dia">{{ consumoDiario.datetime }}</div>
-              <div class="consumo-volume">{{ consumoDiario.volume_diario }} m3</div>
+              <div class="consumo-dia consumo-branco">{{ consumoDiario.datetime }}</div>
+              <div class="consumo-volume consumo-branco">{{ consumoDiario.volume_diario }} m3</div>
+              <div v-if="consumoAnterior" class="consumo-anterior-box">
+                <div class="consumo-anterior-titulo">Dia anterior:</div>
+                <div class="consumo-anterior-data">{{ consumoAnterior.datetime }}</div>
+                <div class="consumo-anterior-volume">{{ consumoAnterior.volume_diario }} m3</div>
+              </div>
             </div>
             <div v-else>
-              <div class="texto_normal">Carregando dados...</div>
+              <div class="texto_normal consumo-branco">Carregando dados...</div>
             </div>
           </section>
           <section class="Quadro3">
-            <section class="titulo_quadro">Cobertura</section>
+            <section class="titulo_quadro">Resumo - Consumo Diário</section>
+            <div v-if="ultimosConsumos.length > 0" class="resumo-lista">
+              <div v-for="(item, idx) in ultimosConsumos" :key="item.id_consumo_diario"
+                   :class="['resumo-item', idx % 2 === 0 ? 'resumo-item-claro' : 'resumo-item-escuro']">
+                <span class="resumo-dia">{{ item.datetime }}</span>
+                <span class="resumo-volume">{{ item.volume_diario }} m³</span>
+              </div>
+            </div>
+            <div v-else class="resumo-lista resumo-vazio consumo-branco">Carregando...</div>
           </section>
         </section>
         <!-- Coluna Direita: Detalhes (ocupa toda a altura da coluna) -->
         <section class="dashboard-col dashboard-col-right">
           <section class="Quadro2 quadro-detalhes-vertical">
-            <section class="titulo_quadro">Detalhes</section>
+            <div class="detalhes-header">
+              <section class="titulo_quadro">Detalhes</section>
+              <button class="btn-atualizar" @click="atualizarDetalhes" title="Atualizar Detalhes">
+                &#x21bb;
+              </button>
+            </div>
             <div class="detalhes-container">
               <!-- Legenda do gráfico -->
               <div class="grafico-legenda">
@@ -165,6 +132,8 @@ export default {
     return {
       temperatura: '28°C',
       consumoDiario: null,
+      consumoAnterior: null,
+      ultimosConsumos: [],
       detalhes: null,
       pontosConsumo: [], // Array dos pontos reais da API
       pontosHorizontais: [], // Array processado para o gráfico
@@ -183,6 +152,8 @@ export default {
         if (Array.isArray(data) && data.length > 0) {
           data.sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
           this.consumoDiario = data[0];
+          this.consumoAnterior = data.length > 1 ? data[1] : null;
+          this.ultimosConsumos = data.slice(0, 7);
           // Buscar detalhes do consumo diário
           return fetch(`https://watergame.gabrieltomazini.com/api/v1/consumo-diario/${data[0].id_consumo_diario}/detalhado`)
             .then(res => res.json())
@@ -195,6 +166,8 @@ export default {
       })
       .catch(() => {
         this.consumoDiario = null;
+        this.consumoAnterior = null;
+        this.ultimosConsumos = [];
         this.detalhes = null;
         this.pontosConsumo = [];
         this.pontosHorizontais = [];
@@ -290,6 +263,21 @@ export default {
     },
     hideTooltip() {
       this.tooltip.show = false;
+    },
+    atualizarDetalhes() {
+      // Lógica para atualizar os detalhes, se necessário
+      if (this.consumoDiario && this.consumoDiario.id_consumo_diario) {
+        fetch(`https://watergame.gabrieltomazini.com/api/v1/consumo-diario/${this.consumoDiario.id_consumo_diario}/detalhado`)
+          .then(res => res.json())
+          .then(detalhes => {
+            this.detalhes = detalhes;
+            this.pontosConsumo = detalhes.pontos_consumo || [];
+            this.processarPontosParaGrafico();
+          })
+          .catch(err => {
+            console.error('Erro ao atualizar detalhes:', err);
+          });
+      }
     }
   }
 }
@@ -420,6 +408,55 @@ export default {
   margin-bottom: 8px;
 }
 
+.consumo-branco {
+  color: #fff !important;
+}
+
+.consumo-anterior-box {
+  margin-top: 18px;
+  background: rgba(255,255,255,0.10);
+  border-radius: 8px;
+  padding: 10px 16px;
+  color: #fff;
+}
+
+.consumo-anterior-titulo {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 2px;
+}
+
+.consumo-anterior-data, .consumo-anterior-volume {
+  color: #fff;
+  font-size: 1.05rem;
+  margin-bottom: 2px;
+}
+
+.detalhes-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.btn-atualizar {
+  background: rgba(255,255,255,0.32); /* Mais forte */
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  color: #007bb8;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-atualizar:hover {
+  background: rgba(255,255,255,0.5); /* Mais forte no hover */
+}
+
 .detalhes-container {
   width: 100%;
   height: 100%;
@@ -526,6 +563,42 @@ export default {
   font-style: italic;
   padding: 30px 0;
   font-size: 0.9rem;
+}
+
+/* Estilos da lista de resumo */
+.resumo-lista {
+  width: 100%;
+  margin-top: 8px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: none;
+}
+.resumo-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 14px;
+  font-size: 1.08rem;
+  font-weight: 500;
+}
+.resumo-item-claro {
+  background: rgba(255,255,255,0.13);
+  color: #fff;
+}
+.resumo-item-escuro {
+  background: rgba(0,0,0,0.07);
+  color: #fff;
+}
+.resumo-dia {
+  font-weight: 400;
+}
+.resumo-volume {
+  font-weight: 600;
+}
+.resumo-vazio {
+  padding: 16px 0;
+  text-align: center;
+  color: #fff;
 }
 
 /* Responsividade */
