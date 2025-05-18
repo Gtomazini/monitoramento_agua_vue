@@ -796,6 +796,7 @@ export default {
   height: auto;
   max-height: 350px;
   overflow-y: auto;
+  overflow-x: hidden; /* Evita scroll horizontal */
 }
 
 .analise-item {
@@ -808,6 +809,7 @@ export default {
   cursor: pointer;
   transition: all 0.2s;
   border: none;
+  margin: 0 4px; /* Margem para compensar o scale */
 }
 
 .analise-item-claro {
@@ -824,7 +826,9 @@ export default {
   background: #fff !important;
   color: #007bb8 !important;
   font-weight: bold;
-  transform: scale(1.02);
+  /* Removido o transform: scale para evitar scroll */
+  box-shadow: 0 2px 8px rgba(0, 123, 184, 0.3);
+  border-radius: 4px;
 }
 
 .analise-dia {
