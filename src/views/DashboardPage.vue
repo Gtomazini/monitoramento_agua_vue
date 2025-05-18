@@ -304,22 +304,28 @@ export default {
       
       // Configurações do gráfico
       const larguraGrafico = 500; // 580 - 80 = espaço útil
-      const alturaGrafico = 160; // 190 - 30 = espaço útil
+      const alturaGrafico = 140; // 180 - 40 = espaço útil 
       const margemX = 80;
-      const margemY = 30;
+      const margemYTop = 40;
+      const margemYBottom = 180;
 
       // Processar cada ponto
       this.pontosHorizontais = pontosOrdenados.map((ponto, index) => {
         // Posição X baseada no índice (distribuição uniforme)
-        const x = margemX + (index * larguraGrafico) / Math.max(pontosOrdenados.length - 1, 1);
+        let x;
+        if (pontosOrdenados.length === 1) {
+          x = margemX + larguraGrafico / 2; // Centralizar se apenas um ponto
+        } else {
+          x = margemX + (index * larguraGrafico) / (pontosOrdenados.length - 1);
+        }
         
         // Posição Y baseada no valor (escalonamento)
         let y;
         if (maxValor === minValor) {
-          y = margemY + alturaGrafico / 2; // Centralizar se todos valores iguais
+          y = margemYTop + alturaGrafico / 2; // Centralizar se todos valores iguais
         } else {
           const proporcao = (parseFloat(ponto.consumo_pontos) - minValor) / (maxValor - minValor);
-          y = margemY + alturaGrafico - (proporcao * alturaGrafico);
+          y = margemYBottom - (proporcao * alturaGrafico);
         }
 
         // Extrair hora do datetime
@@ -386,17 +392,26 @@ export default {
       const minValor = Math.min(...valores);
       const maxValor = Math.max(...valores);
       const larguraGrafico = 500;
-      const alturaGrafico = 160;
+      const alturaGrafico = 140;
       const margemX = 80;
-      const margemY = 30;
+      const margemYTop = 40;
+      const margemYBottom = 180;
+      
       this.analisePontosHorizontais = pontosOrdenados.map((ponto, index) => {
-        const x = margemX + (index * larguraGrafico) / Math.max(pontosOrdenados.length - 1, 1);
+        // Corrigir cálculo de X para não sair dos eixos
+        let x;
+        if (pontosOrdenados.length === 1) {
+          x = margemX + larguraGrafico / 2;
+        } else {
+          x = margemX + (index * larguraGrafico) / (pontosOrdenados.length - 1);
+        }
+        
         let y;
         if (maxValor === minValor) {
-          y = margemY + alturaGrafico / 2;
+          y = margemYTop + alturaGrafico / 2;
         } else {
           const proporcao = (parseFloat(ponto.consumo_pontos) - minValor) / (maxValor - minValor);
-          y = margemY + alturaGrafico - (proporcao * alturaGrafico);
+          y = margemYBottom - (proporcao * alturaGrafico);
         }
         const hora = new Date(ponto.datetime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         return { x, y, hora, valor: ponto.consumo_pontos, datetime: ponto.datetime };
@@ -709,6 +724,7 @@ export default {
   overflow: hidden;
   background: none;
 }
+
 .resumo-item {
   display: flex;
   justify-content: space-between;
@@ -717,20 +733,25 @@ export default {
   font-size: 1.08rem;
   font-weight: 500;
 }
+
 .resumo-item-claro {
   background: rgba(255,255,255,0.13);
   color: #fff;
 }
+
 .resumo-item-escuro {
   background: rgba(0,0,0,0.07);
   color: #fff;
 }
+
 .resumo-dia {
   font-weight: 400;
 }
+
 .resumo-volume {
   font-weight: 600;
 }
+
 .resumo-vazio {
   padding: 16px 0;
   text-align: center;
@@ -739,102 +760,158 @@ export default {
 
 /* Estilos da análise diária */
 .quadro-analise-diaria {
-  min-height: 480px;
+  min-height: 400px;
   height: auto;
-  max-height: none;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: 32px 32px 64px 32px; /* aumenta o padding inferior */
+  padding: 20px;
   box-sizing: border-box;
 }
+
 .analise-flex {
   display: flex;
   flex-direction: row;
-  gap: 32px;
-  width: auto;
+  gap: 24px;
+  width: 100%;
   height: 100%;
   align-items: flex-start;
-  justify-content: center;
+  justify-content: stretch;
 }
+
 .analise-lista {
-  flex: 0 0 48%;
-  min-width: 260px;
-  max-width: 400px;
+  flex: 0 0 35%;
+  min-width: 280px;
+  max-width: 350px;
   background: rgba(0,0,0,0.07);
   border-radius: 8px;
-  padding: 18px 0 18px 0;
+  padding: 12px 0;
   display: flex;
   flex-direction: column;
   gap: 0;
   height: auto;
+  max-height: 350px;
   overflow-y: auto;
 }
+
 .analise-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 10px 18px;
-  font-size: 1.08rem;
+  font-size: 1.06rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition: all 0.2s;
   border: none;
 }
+
 .analise-item-claro {
   background: rgba(255,255,255,0.13);
   color: #111;
 }
+
 .analise-item-escuro {
   background: rgba(0,0,0,0.07);
   color: #111;
 }
+
 .analise-item-selecionado {
   background: #fff !important;
   color: #007bb8 !important;
   font-weight: bold;
+  transform: scale(1.02);
 }
+
 .analise-dia {
   font-weight: 400;
 }
+
 .analise-volume {
   font-weight: 700;
 }
+
 .analise-grafico {
-  flex: 1 1 0;
-  min-width: 320px;
-  max-width: 600px;
-  padding: 0 8px;
+  flex: 1;
+  min-width: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
+  background: rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 16px;
 }
+
+.grafico-legenda-analise {
+  margin-bottom: 16px;
+}
+
+.grafico-legenda-analise h4 {
+  font-size: 1.05rem;
+  margin: 0 0 6px 0;
+}
+
+.grafico-legenda-analise p {
+  font-size: 0.85rem;
+}
+
 @media (max-width: 1200px) {
   .analise-lista {
-    min-width: 180px;
-    max-width: 320px;
-  }
-  .analise-grafico {
-    min-width: 200px;
-    max-width: 100%;
+    min-width: 240px;
+    max-width: 300px;
   }
 }
+
 @media (max-width: 900px) {
-  .quadro-analise-diaria {
-    min-height: 240px;
-    height: auto;
-    max-height: none;
+  .dashboard-content {
+    margin-left: 80px;
+    padding: 10px;
   }
+  
+  .dashboard-row {
+    flex-direction: column;
+    gap: 16px;
+    height: auto;
+  }
+  
+  .dashboard-col, 
+  .dashboard-col-left, 
+  .dashboard-col-right {
+    min-width: unset;
+    max-width: unset;
+    width: 100%;
+    height: auto;
+    flex: none;
+  }
+  
+  .Quadro2 {
+    min-height: 320px;
+    width: 100%;
+  }
+
+  .quadro-analise-diaria {
+    min-height: 350px;
+    height: auto;
+  }
+  
   .analise-flex {
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
     align-items: stretch;
     justify-content: flex-start;
   }
-  .analise-lista, .analise-grafico {
+  
+  .analise-lista {
     max-width: 100%;
+    width: 100%;
+    min-width: unset;
+    max-height: 200px;
+  }
+  
+  .analise-grafico {
     width: 100%;
     min-width: unset;
   }
@@ -845,11 +922,13 @@ export default {
     margin-left: 0; /* Remove margin do sidebar em telas muito pequenas */
     padding: 5px;
   }
+  
   .quadro-analise-diaria {
     min-height: 200px;
     height: 200px;
     max-height: 240px;
   }
+  
   .timeline-svg-horizontal {
     height: 120px !important;
   }
