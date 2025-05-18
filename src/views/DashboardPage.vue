@@ -15,6 +15,20 @@
                 <div class="consumo-anterior-data">{{ consumoAnterior.datetime }}</div>
                 <div class="consumo-anterior-volume">{{ consumoAnterior.volume_diario }} m3</div>
               </div>
+              <div v-if="consumoAnterior && consumoDiario" class="consumo-variacao-bloco">
+                <div class="consumo-variacao"
+                     :class="{'variacao-negativa': variacaoConsumo < 0, 'variacao-positiva': variacaoConsumo > 0}">
+                  <template v-if="variacaoConsumo < 0">
+                    Consumo caiu {{ Math.abs(variacaoConsumo).toFixed(1) }}%
+                  </template>
+                  <template v-else-if="variacaoConsumo > 0">
+                    Consumo subiu {{ variacaoConsumo.toFixed(1) }}%
+                  </template>
+                  <template v-else>
+                    Consumo estável
+                  </template>
+                </div>
+              </div>
             </div>
             <div v-else>
               <div class="texto_normal consumo-branco">Carregando dados...</div>
@@ -264,6 +278,13 @@ export default {
       const max = parseFloat(this.maxValorGrafico);
       const min = parseFloat(this.minValorGrafico);
       return ((max + min) / 2).toFixed(3);
+    },
+    variacaoConsumo() {
+      if (!this.consumoAnterior || !this.consumoDiario) return 0;
+      const anterior = parseFloat(this.consumoAnterior.volume_diario);
+      const atual = parseFloat(this.consumoDiario.volume_diario);
+      if (anterior === 0) return 0;
+      return ((atual - anterior) / anterior) * 100;
     },
     analisePolylinePointsHorizontal() {
       return this.analisePontosHorizontais.map(p => `${p.x},${p.y}`).join(' ');
@@ -576,6 +597,29 @@ export default {
   color: #fff;
   font-size: 1.05rem;
   margin-bottom: 2px;
+}
+
+.consumo-variacao {
+  font-size: 1.25rem;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+.variacao-negativa {
+  color: #1bbd36; /* verde para economia */
+}
+
+.variacao-positiva {
+  color: #e53935; /* vermelho para aumento */
+}
+
+.consumo-variacao-bloco {
+  margin-top: 14px;
+  background: rgba(255,255,255,0.18);
+  border-radius: 10px;
+  padding: 14px 10px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
 .detalhes-header {
