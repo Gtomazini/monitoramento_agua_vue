@@ -60,7 +60,7 @@
       }
     },
     mounted() {
-      fetch('http://watergame.gabrieltomazini.com:8000/api/v1/devices/')
+      fetch('https://watergame.gabrieltomazini.com/api/v1/devices/')
         .then(res => res.json())
         .then(data => {
           // Ajusta para pegar apenas name_device

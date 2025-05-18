@@ -177,14 +177,14 @@ export default {
     }
   },
   mounted() {
-    fetch('http://watergame.gabrieltomazini.com:8000/api/v1/consumo-diario/')
+    fetch('https://watergame.gabrieltomazini.com/api/v1/consumo-diario/')
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
           data.sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
           this.consumoDiario = data[0];
           // Buscar detalhes do consumo diário
-          return fetch(`http://watergame.gabrieltomazini.com:8000/api/v1/consumo-diario/${data[0].id_consumo_diario}/detalhado`)
+          return fetch(`https://watergame.gabrieltomazini.com/api/v1/consumo-diario/${data[0].id_consumo_diario}/detalhado`)
             .then(res => res.json())
             .then(detalhes => {
               this.detalhes = detalhes;
