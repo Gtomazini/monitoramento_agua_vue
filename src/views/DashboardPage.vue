@@ -222,39 +222,103 @@ export default {
     }
   },
   mounted() {
-    fetch('https://watergame.gabrieltomazini.com/api/v1/consumo-diario/')
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          data.sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
-          this.consumoDiario = data[0];
-          this.consumoAnterior = data.length > 1 ? data[1] : null;
-          this.ultimosConsumos = data.slice(0, 7);
-          // Buscar detalhes do consumo diário
-          return fetch(`https://watergame.gabrieltomazini.com/api/v1/consumo-diario/${data[0].id_consumo_diario}/detalhado`)
-            .then(res => res.json())
-            .then(detalhes => {
-              this.detalhes = detalhes;
-              this.pontosConsumo = detalhes.pontos_consumo || [];
-              this.processarPontosParaGrafico();
-            });
-        }
-      })
-      .catch(() => {
+    // Preferir buscar consumos por device (quando há userId). Caso contrário, usar o endpoint global.
+    const userId = localStorage.getItem('userId')
+
+    const handleConsumptionsArray = (data) => {
+      if (Array.isArray(data) && data.length > 0) {
+        // Normalizar: alguns endpoints retornam objetos com campos diferentes, assumimos formato esperado
+        data.sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
+        this.consumoDiario = data[0];
+        this.consumoAnterior = data.length > 1 ? data[1] : null;
+        this.ultimosConsumos = data.slice(0, 7);
+        // Buscar detalhes do consumo diário do mais recente
+        return fetch(`https://watergame.gabrieltomazini.com/api/v1/consumo-diario/${data[0].id_consumo_diario}/detalhado`)
+          .then(res => res.json())
+          .then(detalhes => {
+            this.detalhes = detalhes;
+            this.pontosConsumo = detalhes.pontos_consumo || [];
+            this.processarPontosParaGrafico();
+          })
+          .catch(err => {
+            console.error('Erro ao obter detalhes do consumo diário:', err);
+          });
+      } else {
+        // nenhum consumo encontrado
         this.consumoDiario = null;
         this.consumoAnterior = null;
         this.ultimosConsumos = [];
         this.detalhes = null;
         this.pontosConsumo = [];
         this.pontosHorizontais = [];
-      });
+        return Promise.resolve();
+      }
+    }
 
-      // Seleciona o mais recente por padrão
-      this.$nextTick(() => {
-        if (this.ultimosConsumos.length > 0) {
-          this.selecionarAnalise(this.ultimosConsumos[0].id_consumo_diario);
-        }
-      });
+    if (userId) {
+      // Pega lista de devices do usuário e faz requests por device
+      fetch(`https://watergame.gabrieltomazini.com/api/v1/users/${encodeURIComponent(userId)}/devices/`)
+        .then(res => res.json())
+        .then(devices => {
+          const deviceIds = Array.isArray(devices) ? devices.map(d => d.id_device).filter(Boolean) : [];
+          if (deviceIds.length === 0) {
+            // fallback para endpoint global
+            return fetch('https://watergame.gabrieltomazini.com/api/v1/consumo-diario/')
+              .then(res => res.json());
+          }
+
+          // Buscar consumos diários por device (paralelo)
+          const requests = deviceIds.map(id =>
+            fetch(`https://watergame.gabrieltomazini.com/api/v1/devices/${id}/consumo-diario/`)
+              .then(r => r.ok ? r.json() : [])
+              .catch(() => [])
+          );
+
+          return Promise.all(requests).then(results => {
+            // results: array de arrays de consumo; achatar e padronizar
+            const flattened = results.reduce((acc, cur) => {
+              if (Array.isArray(cur)) acc.push(...cur);
+              return acc;
+            }, []);
+            return flattened;
+          });
+        })
+        .then(handleConsumptionsArray)
+        .catch(() => {
+          // Erro geral: limpa estados e tenta recuperar do endpoint global como fallback
+          fetch('https://watergame.gabrieltomazini.com/api/v1/consumo-diario/')
+            .then(res => res.json())
+            .then(handleConsumptionsArray)
+            .catch(() => {
+              this.consumoDiario = null;
+              this.consumoAnterior = null;
+              this.ultimosConsumos = [];
+              this.detalhes = null;
+              this.pontosConsumo = [];
+              this.pontosHorizontais = [];
+            });
+        });
+    } else {
+      // Sem userId: comportamento anterior (global)
+      fetch('https://watergame.gabrieltomazini.com/api/v1/consumo-diario/')
+        .then(res => res.json())
+        .then(handleConsumptionsArray)
+        .catch(() => {
+          this.consumoDiario = null;
+          this.consumoAnterior = null;
+          this.ultimosConsumos = [];
+          this.detalhes = null;
+          this.pontosConsumo = [];
+          this.pontosHorizontais = [];
+        });
+    }
+
+    // Seleciona o mais recente por padrão (vai funcionar após as promises resolverem)
+    this.$nextTick(() => {
+      if (this.ultimosConsumos.length > 0) {
+        this.selecionarAnalise(this.ultimosConsumos[0].id_consumo_diario);
+      }
+    });
   },
   computed: {
     polylinePointsVertical() {
