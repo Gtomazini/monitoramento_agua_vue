@@ -4,10 +4,9 @@ import Dashboard from '../views/DashboardPage.vue'
 import AccessCode from '@/views/AccessCodePage.vue'
 
 const routes = [
-    {
+  {
     path: '/',
-    name: 'AccessCode',
-    component: AccessCode
+    redirect: '/access'
   },
   {
     path: '/access',
