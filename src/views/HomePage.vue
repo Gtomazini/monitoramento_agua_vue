@@ -109,8 +109,13 @@
       }
     },
     mounted() {
-      // Buscar devices primeiro
-      fetch('https://watergame.gabrieltomazini.com/api/v1/devices/')
+      // Buscar devices primeiro - se tiver userId vai usar ele, buscar apenas os devices deste usuário
+      const userId = localStorage.getItem('userId')
+      const devicesEndpoint = userId
+        ? `https://watergame.gabrieltomazini.com/api/v1/users/${encodeURIComponent(userId)}/devices/`
+        : 'https://watergame.gabrieltomazini.com/api/v1/devices/'
+
+      fetch(devicesEndpoint)
         .then(res => res.json())
         .then(devicesData => {
           this.devices = Array.isArray(devicesData) ? devicesData.map(d => ({ name: d.name_device, id: d.id_device })) : [];
