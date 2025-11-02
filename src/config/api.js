@@ -29,7 +29,6 @@ export async function validateAccessCode(code) {
     const path = API_CONFIG.AUTH_ENDPOINTS.VALIDATE_ACCESS_CODE.replace('{codigo_user}', encodeURIComponent(code))
     const url = API_CONFIG.BASE_URL + path
 
-    // Envia POST conforme contrato (parece não exigir body, apenas path param)
     const res = await fetch(url, {
       method: 'POST',
       headers: {

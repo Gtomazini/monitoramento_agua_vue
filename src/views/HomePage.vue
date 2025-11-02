@@ -7,7 +7,7 @@
         <section class="coluna">
           <section class="linha1">
             <section class="Quadro1">
-              <section class="titulo_quadro">Bem vindo, Gabriel !</section>
+              <section class="titulo_quadro">Bem vindo, {{ username }} !</section>
               <section class="bloco_texto">
                 <div v-if="cobertura < 20" class="status-alerta status-urgencia">URGÊNCIA - Chamar o suporte</div>
                 <div v-else-if="cobertura < 50" class="status-alerta status-alerta-amarelo">ALERTA - Sensores sem leitura</div>
@@ -68,7 +68,9 @@
                   TOMAZINI, Gabriel<br>
                   MARTINS, Gabriela Gosuen<br>
                   SOUZA, Mirella<br>
-                  BORGES, Sandro Fonseca
+                  OLIVEIRA, Fábricio G. De Lima<br>
+                  LOPES, Lucas da Silva<br>
+                  REIS, Leandro Ribeiro<br>
                 </div>
                 <div class="sobre-titulo">
                   <strong>Título:</strong><br>
@@ -76,9 +78,8 @@
                 </div>
               </div>
               <div class="sobre-col sobre-info">
-                <strong>Relatório Técnico-Científico</strong> – 17 f.<br>
                 Engenharia da Computação – Universidade Virtual do Estado de São Paulo<br>
-                <strong>Tutor:</strong> José Vitor Carignato David<br>
+                <strong>Tutor:</strong> Kenedy Augusto Beer<br>
                 <strong>Polos:</strong> Franca e Ribeirão Preto - SP<br>
                 <strong>Ano:</strong> 2025
               </div>
@@ -105,12 +106,25 @@
         temperatura: '28°C',
         devices: [],
         cobertura: 0, // porcentagem de cobertura
+        username: 'Gabriel',
         horarioSistema: ''
       }
     },
     mounted() {
       // Buscar devices primeiro - se tiver userId vai usar ele, buscar apenas os devices deste usuário
       const userId = localStorage.getItem('userId')
+
+      // Se tivermos userId, buscar também os dados do usuário para exibir o username
+      if (userId) {
+        fetch(`https://watergame.gabrieltomazini.com/api/v1/users/${encodeURIComponent(userId)}`)
+          .then(res => res.json())
+          .then(userData => {
+            if (userData && userData.username) this.username = userData.username
+          })
+          .catch(() => {
+            // mantém username padrão se falhar
+          })
+      }
       const devicesEndpoint = userId
         ? `https://watergame.gabrieltomazini.com/api/v1/users/${encodeURIComponent(userId)}/devices/`
         : 'https://watergame.gabrieltomazini.com/api/v1/devices/'
