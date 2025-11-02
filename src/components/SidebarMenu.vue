@@ -1,6 +1,6 @@
 <template>
     <section class="sidebar">
-      <router-link to="/">
+      <router-link to="/home">
         <section class="item_side_menu">
           <img src="@/assets/images/side_menu/home.png" alt="Home">
           HOME
